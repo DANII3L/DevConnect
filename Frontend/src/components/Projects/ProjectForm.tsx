@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Plus, Loader2 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import ApiService from '../../services/apiService';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface ProjectFormProps {
@@ -9,7 +9,7 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ onClose, onSuccess }: ProjectFormProps) {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [techInput, setTechInput] = useState('');
@@ -42,30 +42,29 @@ export function ProjectForm({ onClose, onSuccess }: ProjectFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !session?.access_token) return;
 
     setError('');
     setLoading(true);
 
     try {
-      const { error: insertError } = await supabase.from('projects').insert([
-        {
-          user_id: user.id,
-          title: formData.title,
-          description: formData.description,
-          demo_url: formData.demo_url || null,
-          github_url: formData.github_url || null,
-          tech_stack: formData.tech_stack,
-          image_url: formData.image_url || null,
-        }
-      ]);
+      const response = await ApiService.createProject({
+        title: formData.title,
+        description: formData.description,
+        demo_url: formData.demo_url || undefined,
+        github_url: formData.github_url || undefined,
+        tech_stack: formData.tech_stack,
+        image_url: formData.image_url || undefined,
+      }, session.access_token);
 
-      if (insertError) throw insertError;
-
-      onSuccess();
-      onClose();
+      if (response.success) {
+        onSuccess();
+        onClose();
+      } else {
+        throw new Error(response.error || 'Error al crear proyecto');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create project');
+      setError(err instanceof Error ? err.message : 'Error al crear proyecto');
     } finally {
       setLoading(false);
     }

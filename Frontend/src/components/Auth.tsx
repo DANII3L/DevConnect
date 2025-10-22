@@ -6,6 +6,8 @@ export function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn, signUp } = useAuth();
@@ -19,7 +21,7 @@ export function Auth() {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        await signUp(email, password);
+        await signUp(email, password, fullName, username);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -50,6 +52,40 @@ export function Auth() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {!isLogin && (
+                <>
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-medium text-slate-300 mb-2">
+                      Nombre Completo
+                    </label>
+                    <input
+                      id="fullName"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required={!isLogin}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      placeholder="Tu nombre completo"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-2">
+                      Nombre de Usuario
+                    </label>
+                    <input
+                      id="username"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required={!isLogin}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      placeholder="tu_usuario"
+                    />
+                  </div>
+                </>
+              )}
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
                   Correo Electrónico
@@ -108,6 +144,11 @@ export function Auth() {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setError('');
+                  // Limpiar campos al cambiar de modo
+                  setEmail('');
+                  setPassword('');
+                  setFullName('');
+                  setUsername('');
                 }}
                 className="text-slate-400 hover:text-white transition-colors text-sm"
               >
