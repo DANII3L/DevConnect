@@ -1,5 +1,5 @@
 import { ExternalLink, Github, Calendar, Eye } from 'lucide-react';
-import { Project } from '../../lib/supabase';
+import { Project } from '../../types';
 
 interface ProjectCardProps {
   project: Project;

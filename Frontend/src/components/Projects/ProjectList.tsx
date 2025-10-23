@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Code2 } from 'lucide-react';
-import { Project } from '../../lib/supabase';
+import { Project } from '../../types';
 import { ProjectCard } from './ProjectCard';
 import { ProjectForm } from './ProjectForm';
 import { ProjectModal } from './ProjectModal';

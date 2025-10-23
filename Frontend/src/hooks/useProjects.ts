@@ -1,25 +1,7 @@
 import { useState, useEffect } from 'react';
 import ApiService from '../services/apiService';
 import { cacheService } from '../services/cacheService';
-
-export interface Project {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  demo_url?: string;
-  github_url?: string;
-  tech_stack: string[];
-  image_url?: string;
-  created_at: string;
-  updated_at: string;
-  user?: {
-    id: string;
-    full_name?: string;
-    username?: string;
-    avatar_url?: string;
-  };
-}
+import { Project } from '../types';
 
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);

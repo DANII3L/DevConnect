@@ -1,8 +1,5 @@
-import { X, ExternalLink, Github, Calendar, User } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Project } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { X, ExternalLink, Github, Calendar } from 'lucide-react';
+import { Project } from '../../types';
 
 interface ProjectModalProps {
   project: Project;
@@ -10,47 +7,8 @@ interface ProjectModalProps {
   onClose: () => void;
 }
 
-interface UserData {
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-}
-
 export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
-  const { user } = useAuth();
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loadingUser, setLoadingUser] = useState(false);
-  
   if (!isOpen) return null;
-
-  const fetchUserById = async (userId: string) => {
-    try {
-      setLoadingUser(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .eq('id', userId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user:', error);
-        setUserData(null);
-      } else {
-        setUserData(data);
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      setUserData(null);
-    } finally {
-      setLoadingUser(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen && project.user_id) {
-      fetchUserById(project.user_id);
-    }
-  }, [isOpen, project.user_id]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -122,30 +80,17 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
             <div>
               <h3 className="text-lg font-semibold text-white mb-3">Autor del Proyecto</h3>
               <div className="flex items-center gap-3 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-                {loadingUser ? (
-                  <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center animate-pulse">
-                    <User className="w-6 h-6 text-slate-400" />
-                  </div>
-                ) : userData?.avatar_url ? (
-                  <img
-                    src={userData.avatar_url}
-                    alt={userData.full_name || 'Usuario'}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-white" />
-                  </div>
-                )}
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">
+                    {project.user?.full_name?.charAt(0) || 'D'}
+                  </span>
+                </div>
                 <div>
                   <p className="text-white font-medium">
-                    {project.user_id === user?.id 
-                      ? 'Tú' 
-                      : 'Desarrollador'
-                    }
+                    {project.user?.full_name || 'Desarrollador'}
                   </p>
                   <p className="text-slate-400 text-sm">
-                    {loadingUser ? 'Cargando...' : (userData?.full_name || 'Usuario de la comunidad')}
+                    Miembro de la comunidad
                   </p>
                 </div>
               </div>
