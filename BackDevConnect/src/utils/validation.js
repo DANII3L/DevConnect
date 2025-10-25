@@ -27,6 +27,20 @@ const validation = {
       throw new Error(`${fieldName} debe ser una URL válida`);
     }
     return true;
+  },
+
+  minLength: (value, min, fieldName) => {
+    if (value && value.length < min) {
+      throw new Error(`${fieldName} debe tener al menos ${min} caracteres`);
+    }
+    return true;
+  },
+
+  maxLength: (value, max, fieldName) => {
+    if (value && value.length > max) {
+      throw new Error(`${fieldName} no puede tener más de ${max} caracteres`);
+    }
+    return true;
   }
 };
 

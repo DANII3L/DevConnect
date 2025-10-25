@@ -6,6 +6,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const profileRoutes = require('./routes/profiles');
+const commentRoutes = require('./routes/comments');
 const swaggerSpecs = require('./config/swagger');
 const { errorHandler, notFoundHandler } = require('./utils/errors');
 const logger = require('./middleware/logger');
@@ -15,7 +16,12 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(logger);
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -29,6 +35,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/profiles', profileRoutes);
+app.use('/api/comments', commentRoutes);
 
 // Error handling
 app.use('*', notFoundHandler);

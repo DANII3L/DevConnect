@@ -46,6 +46,17 @@ const parameters = {
             type: 'string',
             format: 'uuid'
         }
+    },
+    ProjectIdParam: {
+        name: 'projectId',
+        in: 'path',
+        description: 'ID del proyecto',
+        required: true,
+        schema: {
+            type: 'string',
+            format: 'uuid',
+            example: '8dd1eda7-6043-478f-b47b-2aede42502fc'
+        }
     }
 };
 

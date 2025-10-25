@@ -1,73 +1,51 @@
 import React from 'react';
-
-interface Comment {
-  id: string;
-  content: string;
-  author: {
-    id: string;
-    username: string;
-    avatar_url?: string;
-  };
-  created_at: string;
-  updated_at: string;
-  replies_count: number;
-  likes_count: number;
-  is_liked: boolean;
-}
-
-interface CommentCardProps {
-  comment: Comment;
-  showReplies: boolean;
-  onToggleReplies: () => void;
-  onLike: () => void;
-  projectId: string;
-}
+import { CommentCardProps } from '../../types';
 
 export const CommentCard: React.FC<CommentCardProps> = ({
   comment,
-  showReplies,
   onToggleReplies,
-  onLike,
-  projectId
+  onLike
 }) => {
   return (
-    <div className="border rounded-lg p-4">
+    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 mb-4 transition-all duration-200 hover:bg-slate-800/70">
       <div className="flex items-start gap-3">
-        <img
-          src={comment.author.avatar_url || '/default-avatar.png'}
-          alt={comment.author.username}
-          className="w-8 h-8 rounded-full"
-        />
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+          {(comment.author.full_name || comment.author.username).charAt(0).toUpperCase()}
+        </div>
         
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">{comment.author.username}</span>
-            <span className="text-xs text-gray-500">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-medium text-sm text-white">
+              {comment.author.full_name || comment.author.username}
+            </span>
+            <span className="text-xs text-slate-400">
               {new Date(comment.created_at).toLocaleDateString()}
             </span>
           </div>
           
-          <p className="mt-1 text-gray-700 whitespace-pre-wrap">
+          <p className="text-slate-200 whitespace-pre-wrap leading-relaxed">
             {comment.content}
           </p>
           
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-6 mt-3">
             <button
               onClick={onLike}
-              className={`flex items-center gap-1 text-sm hover:text-blue-600 ${
-                comment.is_liked ? 'text-blue-600' : 'text-gray-500'
+              className={`flex items-center gap-1 text-sm transition-colors duration-200 ${
+                comment.is_liked 
+                  ? 'text-yellow-400 hover:text-yellow-300' 
+                  : 'text-slate-400 hover:text-yellow-400'
               }`}
             >
-              <span>👍</span>
-              <span>{comment.likes_count}</span>
+              <span className="text-lg">👍</span>
+              <span className="font-medium">{comment.likes_count}</span>
             </button>
             
             <button
               onClick={onToggleReplies}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-blue-600"
+              className="flex items-center gap-1 text-sm text-slate-400 hover:text-purple-400 transition-colors duration-200"
             >
-              <span>💬</span>
-              <span>{comment.replies_count}</span>
+              <span className="text-lg">💬</span>
+              <span className="font-medium">{comment.replies_count}</span>
             </button>
           </div>
         </div>

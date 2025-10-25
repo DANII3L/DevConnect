@@ -10,7 +10,7 @@ CREATE POLICY "projects_select_public" ON projects
 -- 2. Solo usuarios autenticados pueden crear proyectos
 CREATE POLICY "projects_insert_authenticated" ON projects
     FOR INSERT
-    WITH CHECK (auth.role() = 'authenticated');
+    WITH CHECK (auth.role() = 'authenticated' AND auth.uid() = user_id);
 
 -- 3. Los usuarios pueden actualizar solo sus propios proyectos
 CREATE POLICY "projects_update_own" ON projects

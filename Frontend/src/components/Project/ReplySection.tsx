@@ -27,34 +27,14 @@ export const ReplySection: React.FC<ReplySectionProps> = ({
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
 
-  const {
-    data: replies,
-    isLoading,
-    refetch
-  } = useQuery({
-    queryKey: ['replies', commentId],
-    queryFn: async () => {
-      const response = await fetch(`/api/comments/${commentId}/replies`);
-      return response.json();
-    },
-    staleTime: 2 * 60 * 1000, // 2 minutos
-  });
+  // TODO: Implementar replies cuando esté disponible en el backend
+  const replies = [];
+  const isLoading = false;
+  const refetch = () => {};
 
   const handleReplySubmit = async (content: string) => {
-    try {
-      const response = await fetch(`/api/comments/${commentId}/replies`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
-      });
-
-      if (!response.ok) throw new Error('Error al crear respuesta');
-      
-      setShowReplyForm(false);
-      refetch();
-    } catch (error) {
-      console.error('Error:', error);
-    }
+    // TODO: Implementar cuando esté disponible en el backend
+    setShowReplyForm(false);
   };
 
   return (

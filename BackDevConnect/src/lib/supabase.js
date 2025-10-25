@@ -19,4 +19,15 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-module.exports = supabase;
+// Función para crear cliente autenticado
+const createAuthenticatedClient = (userToken) => {
+    return createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+            headers: {
+                Authorization: `Bearer ${userToken}`
+            }
+        }
+    });
+};
+
+module.exports = { supabase, createAuthenticatedClient };

@@ -1,10 +1,8 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import HttpService from './httpService';
 
 class ApiService {
-  private static getHeaders(token?: string): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+  private static getHeaders(token?: string): Record<string, string> {
+    const headers: Record<string, string> = {};
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -13,70 +11,41 @@ class ApiService {
     return headers;
   }
 
-  private static async handleResponse<T = any>(response: Response): Promise<T> {
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
-    }
-
-    return data;
-  }
-
   static async register(userData: {
     email: string;
     password: string;
     full_name?: string;
     username?: string;
   }) {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(userData),
-    });
-
-    return this.handleResponse(response);
+    const response = await HttpService.post('/auth/register', userData);
+    return response.data;
   }
 
   static async login(credentials: {
     email: string;
     password: string;
   }) {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(credentials),
-    });
-
-    return this.handleResponse(response);
+    const response = await HttpService.post('/auth/login', credentials);
+    return response.data;
   }
 
   static async logout(token: string) {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'POST',
-      headers: this.getHeaders(token),
+    const response = await HttpService.post('/auth/logout', undefined, {
+      headers: this.getHeaders(token)
     });
-
-    return this.handleResponse(response);
+    return response.data;
   }
 
   static async getCurrentUser(token: string) {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      method: 'GET',
-      headers: this.getHeaders(token),
+    const response = await HttpService.get('/auth/me', {
+      headers: this.getHeaders(token)
     });
-
-    return this.handleResponse(response);
+    return response.data;
   }
 
   static async refreshToken(refreshToken: string) {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-
-    return this.handleResponse(response);
+    const response = await HttpService.post('/auth/refresh', { refresh_token: refreshToken });
+    return response.data;
   }
 
   static async getAllProjects(params?: {
@@ -89,22 +58,14 @@ class ApiService {
     if (params?.offset) queryParams.append('offset', params.offset.toString());
     if (params?.search) queryParams.append('search', params.search);
 
-    const url = `${API_BASE_URL}/projects${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-
-    return this.handleResponse(response);
+    const endpoint = `/projects${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await HttpService.get(endpoint);
+    return response.data;
   }
 
   static async getProjectById(id: string) {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-
-    return this.handleResponse(response);
+    const response = await HttpService.get(`/projects/${id}`);
+    return response.data;
   }
 
   static async createProject(projectData: {
@@ -115,13 +76,10 @@ class ApiService {
     tech_stack: string[];
     image_url?: string;
   }, token: string) {
-    const response = await fetch(`${API_BASE_URL}/projects`, {
-      method: 'POST',
-      headers: this.getHeaders(token),
-      body: JSON.stringify(projectData),
+    const response = await HttpService.post('/projects', projectData, {
+      headers: this.getHeaders(token)
     });
-
-    return this.handleResponse(response);
+    return response.data;
   }
 
   static async updateProject(id: string, projectData: {
@@ -132,34 +90,25 @@ class ApiService {
     tech_stack?: string[];
     image_url?: string;
   }, token: string) {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: 'PUT',
-      headers: this.getHeaders(token),
-      body: JSON.stringify(projectData),
+    const response = await HttpService.put(`/projects/${id}`, projectData, {
+      headers: this.getHeaders(token)
     });
-
-    return this.handleResponse(response);
+    return response.data;
   }
 
   static async deleteProject(id: string, token: string) {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: 'DELETE',
-      headers: this.getHeaders(token),
+    const response = await HttpService.delete(`/projects/${id}`, {
+      headers: this.getHeaders(token)
     });
-
-    return this.handleResponse(response);
+    return response.data;
   }
 
   static async getUserProjects(userId: string) {
-    const response = await fetch(`${API_BASE_URL}/projects/user/${userId}`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-
-    return this.handleResponse(response);
+    const response = await HttpService.get(`/projects/user/${userId}`);
+    return response.data;
   }
 
-  static async getAllUsers(params?: {
+  static async getAllProfiles(params?: {
     limit?: number;
     offset?: number;
     search?: string;
@@ -169,40 +118,24 @@ class ApiService {
     if (params?.offset) queryParams.append('offset', params.offset.toString());
     if (params?.search) queryParams.append('search', params.search);
 
-    const url = `${API_BASE_URL}/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-
-    return this.handleResponse(response);
+    const endpoint = `/profiles${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await HttpService.get(endpoint);
+    return response.data;
   }
 
-  static async getUserById(id: string) {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-
-    return this.handleResponse(response);
+  static async getProfileById(id: string) {
+    const response = await HttpService.get(`/profiles/${id}`);
+    return response.data;
   }
 
-  static async searchUsers(query: string) {
-    const response = await fetch(`${API_BASE_URL}/users/search/${encodeURIComponent(query)}`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-
-    return this.handleResponse(response);
+  static async searchProfiles(query: string) {
+    const response = await HttpService.get(`/profiles/search/${encodeURIComponent(query)}`);
+    return response.data;
   }
 
-  static async getUserStats() {
-    const response = await fetch(`${API_BASE_URL}/users/stats`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-
-    return this.handleResponse(response);
+  static async getProfileStats() {
+    const response = await HttpService.get('/profiles/stats');
+    return response.data;
   }
 }
 

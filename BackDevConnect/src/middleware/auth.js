@@ -1,7 +1,7 @@
 // BackDevConnect/src/middleware/auth.js
 // Middleware para autenticación y autorización
 
-const supabase = require('../lib/supabase');
+const { supabase } = require('../lib/supabase');
 
 /**
  * Middleware para verificar autenticación

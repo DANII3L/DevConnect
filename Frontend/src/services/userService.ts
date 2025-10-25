@@ -16,10 +16,10 @@ export interface UserProfile {
 
 export class UserService {
   static async getProfile(userId: string): Promise<UserProfile | null> {
-    const response = await ApiService.getUserById(userId);
+    const response = await ApiService.getProfileById(userId);
     
-    if (response.success && response.user) {
-      return response.user;
+    if (response.success && response.profile) {
+      return response.profile;
     } else {
       if (response.error?.includes('no encontrado')) {
         return null; // Profile not found
@@ -31,11 +31,11 @@ export class UserService {
   static async updateProfile(userId: string, profileData: Partial<UserProfile>, token: string): Promise<UserProfile> {
     // Nota: Este endpoint podría necesitar ser implementado en el backend
     // Por ahora, simulamos la actualización
-    const response = await ApiService.getUserById(userId);
+    const response = await ApiService.getProfileById(userId);
     
-    if (response.success && response.user) {
+    if (response.success && response.profile) {
       // Simular actualización combinando datos existentes con nuevos
-      return { ...response.user, ...profileData };
+      return { ...response.profile, ...profileData };
     } else {
       throw new Error(response.error || 'Error updating user profile');
     }
@@ -53,37 +53,37 @@ export class UserService {
     return newProfile;
   }
 
-  static async getAllUsers(params?: {
+  static async getAllProfiles(params?: {
     limit?: number;
     offset?: number;
     search?: string;
   }): Promise<UserProfile[]> {
-    const response = await ApiService.getAllUsers(params);
+    const response = await ApiService.getAllProfiles(params);
     
     if (response.success) {
-      return response.users || [];
+      return response.profiles || [];
     } else {
-      throw new Error(response.error || 'Error fetching users');
+      throw new Error(response.error || 'Error fetching profiles');
     }
   }
 
-  static async searchUsers(query: string): Promise<UserProfile[]> {
-    const response = await ApiService.searchUsers(query);
+  static async searchProfiles(query: string): Promise<UserProfile[]> {
+    const response = await ApiService.searchProfiles(query);
     
     if (response.success) {
-      return response.users || [];
+      return response.profiles || [];
     } else {
-      throw new Error(response.error || 'Error searching users');
+      throw new Error(response.error || 'Error searching profiles');
     }
   }
 
-  static async getUserStats(): Promise<any> {
-    const response = await ApiService.getUserStats();
+  static async getProfileStats(): Promise<any> {
+    const response = await ApiService.getProfileStats();
     
     if (response.success) {
       return response.stats;
     } else {
-      throw new Error(response.error || 'Error fetching user stats');
+      throw new Error(response.error || 'Error fetching profile stats');
     }
   }
 }

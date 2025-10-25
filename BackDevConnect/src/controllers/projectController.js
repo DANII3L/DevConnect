@@ -168,6 +168,7 @@ class ProjectController {
      */
     static async createProject(req, res) {
         const userId = req.user?.id;
+        const userToken = req.headers.authorization?.split(' ')[1];
         
         if (!userId) {
             return res.status(401).json({
@@ -176,12 +177,19 @@ class ProjectController {
             });
         }
 
+        if (!userToken) {
+            return res.status(401).json({
+                success: false,
+                error: 'Token de autenticación requerido'
+            });
+        }
+
         const projectData = {
             ...req.body,
-            author_id: userId
+            user_id: userId
         };
 
-        const result = await ProjectService.createProject(projectData);
+        const result = await ProjectService.createProject(projectData, userToken);
         
         if (result.success) {
             res.status(201).json({
@@ -270,6 +278,7 @@ class ProjectController {
     static async updateProject(req, res) {
         const { id } = req.params;
         const userId = req.user?.id;
+        const userToken = req.headers.authorization?.split(' ')[1];
         
         if (!userId) {
             return res.status(401).json({
@@ -278,7 +287,14 @@ class ProjectController {
             });
         }
 
-        const result = await ProjectService.updateProject(id, req.body, userId);
+        if (!userToken) {
+            return res.status(401).json({
+                success: false,
+                error: 'Token de autenticación requerido'
+            });
+        }
+
+        const result = await ProjectService.updateProject(id, req.body, userToken);
         
         if (result.success) {
             res.json({
@@ -327,6 +343,7 @@ class ProjectController {
     static async deleteProject(req, res) {
         const { id } = req.params;
         const userId = req.user?.id;
+        const userToken = req.headers.authorization?.split(' ')[1];
         
         if (!userId) {
             return res.status(401).json({
@@ -335,7 +352,14 @@ class ProjectController {
             });
         }
 
-        const result = await ProjectService.deleteProject(id, userId);
+        if (!userToken) {
+            return res.status(401).json({
+                success: false,
+                error: 'Token de autenticación requerido'
+            });
+        }
+
+        const result = await ProjectService.deleteProject(id, userToken);
         
         if (result.success) {
             res.json({
