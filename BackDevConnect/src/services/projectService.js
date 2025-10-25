@@ -1,10 +1,19 @@
-const supabase = require('../lib/supabase');
+const { supabase } = require('../lib/supabase');
 const { mockProjects } = require('./mockData');
+const { createAuthenticatedClient } = require('../lib/supabase');
 
 class ProjectService {
-    static async getAllProjects() {
+    static async getAllProjects(page = 1, limit = 10, search = '') {
         try {
-            const { data, error } = await supabase
+            // Validaciones de entrada
+            if (page < 1 || limit < 1 || limit > 100) {
+                throw new Error('Parámetros de paginación inválidos');
+            }
+            
+            const offset = (page - 1) * limit;
+            
+            // Query base
+            let query = supabase
                 .from('projects')
                 .select(`
                     id,
@@ -16,16 +25,47 @@ class ProjectService {
                     image_url,
                     created_at,
                     updated_at,
-                    user_id
-                `)
-                .order('created_at', { ascending: false });
+                    user_id,
+                    profiles!projects_user_id_fkey(
+                        username,
+                        avatar_url,
+                        full_name
+                    )
+                `, { count: 'exact' });
+            
+            // Aplicar filtro de búsqueda si existe
+            if (search && search.trim()) {
+                query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,tech_stack.ilike.%${search}%`);
+            }
+            
+            // Aplicar paginación y ordenamiento
+            const { data, error, count } = await query
+                .order('created_at', { ascending: false })
+                .range(offset, offset + limit - 1);
 
             if (error) throw error;
 
+            // Procesar datos para incluir información del autor
+            const processedData = (data || []).map(project => {
+                const { profiles, ...projectData } = project;
+                return {
+                    ...projectData,
+                    author: {
+                        id: project.user_id,
+                        username: profiles?.username || 'Usuario',
+                        avatar_url: profiles?.avatar_url || null,
+                        full_name: profiles?.full_name || null
+                    }
+                };
+            });
+
             return {
                 success: true,
-                data: data,
-                total: data.length
+                data: processedData,
+                total: count || 0,
+                page,
+                limit,
+                hasMore: (offset + limit) < (count || 0)
             };
         } catch (error) {
             console.warn('⚠️  Supabase connection failed, using mock data');
@@ -52,7 +92,12 @@ class ProjectService {
                     image_url,
                     created_at,
                     updated_at,
-                    user_id
+                    user_id,
+                    profiles!projects_user_id_fkey(
+                        username,
+                        avatar_url,
+                        full_name
+                    )
                 `)
                 .eq('id', projectId)
                 .single();
@@ -67,9 +112,21 @@ class ProjectService {
                 throw error;
             }
 
+            // Procesar datos para incluir información del autor
+            const { profiles, ...projectData } = data;
+            const processedData = {
+                ...projectData,
+                author: {
+                    id: data.user_id,
+                    username: profiles?.username || 'Usuario',
+                    avatar_url: profiles?.avatar_url || null,
+                    full_name: profiles?.full_name || null
+                }
+            };
+
             return {
                 success: true,
-                data: data
+                data: processedData
             };
         } catch (error) {
             console.error('ProjectService.getProjectById error:', error);
@@ -80,9 +137,12 @@ class ProjectService {
         }
     }
 
-    static async createProject(projectData) {
+    static async createProject(projectData, userToken) {
         try {
-            const { data, error } = await supabase
+            // Crear cliente autenticado
+            const supabaseClient = createAuthenticatedClient(userToken);
+            
+            const { data, error } = await supabaseClient
                 .from('projects')
                 .insert([projectData])
                 .select(`
@@ -113,9 +173,12 @@ class ProjectService {
         }
     }
 
-    static async updateProject(projectId, updateData) {
+    static async updateProject(projectId, updateData, userToken) {
         try {
-            const { data, error } = await supabase
+            // Crear cliente autenticado
+            const supabaseClient = createAuthenticatedClient(userToken);
+            
+            const { data, error } = await supabaseClient
                 .from('projects')
                 .update(updateData)
                 .eq('id', projectId)
@@ -147,9 +210,12 @@ class ProjectService {
         }
     }
 
-    static async deleteProject(projectId) {
+    static async deleteProject(projectId, userToken) {
         try {
-            const { error } = await supabase
+            // Crear cliente autenticado
+            const supabaseClient = createAuthenticatedClient(userToken);
+            
+            const { error } = await supabaseClient
                 .from('projects')
                 .delete()
                 .eq('id', projectId);
@@ -248,6 +314,7 @@ class ProjectService {
     // Obtener proyectos con paginación
     static async getProjectsPaginated(limit = 10, offset = 0, search = null) {
         try {
+            // Query para obtener proyectos
             let query = supabase
                 .from('projects')
                 .select(`
@@ -261,7 +328,7 @@ class ProjectService {
                     created_at,
                     updated_at,
                     user_id
-                `)
+                `, { count: 'exact' })
                 .order('created_at', { ascending: false })
                 .range(offset, offset + limit - 1);
 
@@ -270,20 +337,64 @@ class ProjectService {
                 query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
             }
 
-            const { data, error } = await query;
+            const { data: projects, error, count } = await query;
 
             if (error) {
                 throw error;
             }
 
+            if (!projects || projects.length === 0) {
+                return {
+                    success: true,
+                    data: [],
+                    total: 0,
+                    pagination: {
+                        limit,
+                        offset,
+                        hasMore: false
+                    }
+                };
+            }
+
+            // Obtener información de los usuarios
+            const userIds = projects.map(p => p.user_id);
+            const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, username, avatar_url, full_name')
+                .in('id', userIds);
+
+            if (profilesError) {
+                throw profilesError;
+            }
+
+            // Crear un mapa de perfiles por ID
+            const profilesMap = {};
+            (profiles || []).forEach(profile => {
+                profilesMap[profile.id] = profile;
+            });
+
+            // Procesar datos para incluir información del autor
+            const processedData = projects.map(project => {
+                const profile = profilesMap[project.user_id];
+                return {
+                    ...project,
+                    author: {
+                        id: project.user_id,
+                        username: profile?.username || 'Usuario',
+                        avatar_url: profile?.avatar_url || null,
+                        full_name: profile?.full_name || null
+                    }
+                };
+            });
+
             return {
                 success: true,
-                data: data,
-                total: data.length,
+                data: processedData,
+                total: count || 0,
                 pagination: {
                     limit,
                     offset,
-                    hasMore: data.length === limit
+                    hasMore: (offset + limit) < (count || 0)
                 }
             };
         } catch (error) {

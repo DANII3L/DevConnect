@@ -1,4 +1,4 @@
-import { useInfiniteQuery, UseInfiniteQueryOptions } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 interface InfiniteScrollConfig<T> {
   queryKey: (string | number)[];
@@ -9,7 +9,7 @@ interface InfiniteScrollConfig<T> {
   }>;
   initialData?: T[];
   staleTime?: number;
-  cacheTime?: number;
+  gcTime?: number;
 }
 
 export function useInfiniteScroll<T>({
@@ -17,7 +17,7 @@ export function useInfiniteScroll<T>({
   queryFn,
   initialData = [],
   staleTime = 5 * 60 * 1000,
-  cacheTime = 10 * 60 * 1000
+  gcTime = 10 * 60 * 1000
 }: InfiniteScrollConfig<T>) {
   const {
     data,
@@ -40,7 +40,8 @@ export function useInfiniteScroll<T>({
       pageParams: [0]
     } : undefined,
     staleTime,
-    cacheTime,
+    gcTime,
+    initialPageParam: 0
   });
 
   const allItems = data?.pages.flatMap(page => page.data) || [];

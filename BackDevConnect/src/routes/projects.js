@@ -4,6 +4,7 @@ const { authenticateToken, requireOwnership } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Rutas de proyectos
 router.get('/', ProjectController.getAllProjects);
 router.get('/:id', ProjectController.getProjectById);
 router.post('/', authenticateToken, ProjectController.createProject);

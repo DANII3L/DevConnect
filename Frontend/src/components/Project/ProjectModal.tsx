@@ -11,6 +11,8 @@ interface ProjectModalProps {
 export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
   if (!isOpen) return null;
 
+  // Component logic
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -83,15 +85,15 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
               <div className="flex items-center gap-3 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold text-lg">
-                    {project.user?.full_name?.charAt(0) || 'D'}
+                    {(project.author?.full_name || project.author?.username || 'D').charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
                   <p className="text-white font-medium">
-                    {project.user?.full_name || 'Desarrollador'}
+                    {project.author?.full_name || project.author?.username || 'Desarrollador'}
                   </p>
                   <p className="text-slate-400 text-sm">
-                    Miembro de la comunidad
+                    {project.author?.username ? `@${project.author.username}` : 'Miembro de la comunidad'}
                   </p>
                 </div>
               </div>
@@ -146,7 +148,13 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
 
             {/* Sección de comentarios */}
             <div className="border-t border-slate-700 pt-6">
-              <CommentSection projectId={project.id} />
+              {project.id && project.id !== 'null' ? (
+                <CommentSection projectId={project.id} />
+              ) : (
+                <div className="text-center py-4 text-slate-400">
+                  <p>No se puede cargar los comentarios: ID de proyecto inválido</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

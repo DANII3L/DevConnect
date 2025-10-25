@@ -17,7 +17,7 @@ export function useProjects() {
     const cacheKey = `projects-${JSON.stringify(params || {})}`;
     
     // Verificar cache primero
-    const cachedData = cacheService.get(cacheKey);
+    const cachedData = cacheService.get<{projects: Project[], total: number}>(cacheKey);
     if (cachedData) {
       setProjects(cachedData.projects);
       setTotal(cachedData.total);

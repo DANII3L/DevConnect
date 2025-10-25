@@ -5,8 +5,12 @@ import { AppRouter } from './Router';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos
+      staleTime: 10 * 60 * 1000, // 10 minutos - evita refetch automático
+      gcTime: 30 * 60 * 1000, // 30 minutos - mantiene cache más tiempo
+      refetchOnWindowFocus: false, // No refetch al cambiar de ventana
+      refetchOnMount: false, // No refetch al montar componente
+      refetchOnReconnect: false, // No refetch al reconectar
+      retry: 1, // Solo 1 reintento en caso de error
     },
   },
 });

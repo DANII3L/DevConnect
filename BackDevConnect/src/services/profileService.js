@@ -1,4 +1,4 @@
-const supabase = require('../lib/supabase');
+const { supabase } = require('../lib/supabase');
 
 class ProfileService {
     static async getAllProfiles() {
