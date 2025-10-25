@@ -5,8 +5,8 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
-const userRoutes = require('./routes/users');
-const swaggerSpecs = require('./config/swagger-enhanced');
+const profileRoutes = require('./routes/profiles');
+const swaggerSpecs = require('./config/swagger');
 const { errorHandler, notFoundHandler } = require('./utils/errors');
 const logger = require('./middleware/logger');
 
@@ -28,7 +28,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/profiles', profileRoutes);
 
 // Error handling
 app.use('*', notFoundHandler);

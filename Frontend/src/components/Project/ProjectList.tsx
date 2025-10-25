@@ -5,7 +5,7 @@ import { ProjectCard } from './ProjectCard';
 import { ProjectForm } from './ProjectForm';
 import { ProjectModal } from './ProjectModal';
 import { useProjects } from '../../hooks/useProjects';
-import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { LoadingSpinner } from '../../UI/LoadingSpinner';
 
 interface ProjectListProps {
   showForm?: boolean;

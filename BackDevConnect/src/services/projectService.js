@@ -328,6 +328,56 @@ class ProjectService {
             };
         }
     }
+
+    // Obtener proyectos de un usuario específico
+    static async getUserProjects(userId, limit = 10, offset = 0) {
+        try {
+            const { data, error } = await supabase
+                .from('projects')
+                .select(`
+                    id,
+                    title,
+                    description,
+                    demo_url,
+                    github_url,
+                    tech_stack,
+                    image_url,
+                    created_at,
+                    updated_at,
+                    user_id
+                `)
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .range(offset, offset + limit - 1);
+
+            if (error) throw error;
+
+            // Obtener el total de proyectos del usuario
+            const { count, error: countError } = await supabase
+                .from('projects')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+
+            if (countError) throw countError;
+
+            return {
+                success: true,
+                data: data,
+                total: count || 0,
+                pagination: {
+                    limit,
+                    offset,
+                    hasMore: data.length === limit
+                }
+            };
+        } catch (error) {
+            console.error('Error obteniendo proyectos del usuario:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
 }
 
 module.exports = ProjectService;

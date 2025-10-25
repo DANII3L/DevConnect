@@ -1,4 +1,4 @@
-import { ProjectList } from '../components/Projects/ProjectList';
+import { ProjectList } from '../components/Project/ProjectList';
 import { MainLayout } from '../components/layout/MainLayout';
 import { useState } from 'react';
 

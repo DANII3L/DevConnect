@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { HomePage } from '../pages/HomePage';
-import { AuthPage } from '../pages/AuthPage';
-import { NotFoundPage } from '../pages/NotFoundPage';
-import { ErrorBoundary } from './ui/ErrorBoundary';
-import { LoadingSpinner } from './ui/LoadingSpinner';
+import { useAuth } from './contexts/AuthContext';
+import { HomePage } from './pages/HomePage';
+import { AuthPage } from './pages/AuthPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { ErrorBoundary } from './UI/ErrorBoundary';
+import { LoadingSpinner } from './UI/LoadingSpinner';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();

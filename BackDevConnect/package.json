@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "debug": "node --inspect src/index.js",
+    "debug": "node --inspect=0.0.0.0:9229 src/index.js",
+    "debug-brk": "node --inspect-brk=0.0.0.0:9229 src/index.js",
     "test-db": "node test-db-connection.js",
     "servidor": "node src/servidor.js",
     "test": "echo \"Error: no test specified\" && exit 1"

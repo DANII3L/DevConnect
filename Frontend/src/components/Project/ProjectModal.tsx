@@ -1,5 +1,6 @@
 import { X, ExternalLink, Github, Calendar } from 'lucide-react';
 import { Project } from '../../types';
+import { CommentSection } from '../Comment/CommentSection';
 
 interface ProjectModalProps {
   project: Project;
@@ -21,11 +22,11 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="relative bg-slate-800 rounded-2xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
@@ -105,7 +106,7 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                   <p className="font-medium">{formatDate(project.created_at)}</p>
                 </div>
               </div>
-              
+
               {project.updated_at !== project.created_at && (
                 <div className="flex items-center gap-3 text-slate-300">
                   <Calendar className="w-5 h-5 text-slate-400" />
@@ -141,6 +142,11 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                   Ver Código
                 </a>
               )}
+            </div>
+
+            {/* Sección de comentarios */}
+            <div className="border-t border-slate-700 pt-6">
+              <CommentSection projectId={project.id} />
             </div>
           </div>
         </div>
