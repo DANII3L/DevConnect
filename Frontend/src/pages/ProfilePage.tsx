@@ -12,6 +12,7 @@ export function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
+
   // ✅ Cargar datos del perfil al montar el componente
   useEffect(() => {
     if (!user) return;
