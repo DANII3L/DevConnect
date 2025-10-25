@@ -308,6 +308,7 @@ class AuthController {
             res.status(400).json(response.validation([error.message]));
         }
     }
+
 }
 
 module.exports = AuthController;
