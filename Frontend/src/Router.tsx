@@ -5,7 +5,7 @@ import { AuthPage } from "./pages/AuthPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ErrorBoundary } from "./UI/ErrorBoundary";
 import { LoadingSpinner } from "./UI/LoadingSpinner";
-import { ProfilePage } from "./pages/ProfilePage";
+import { EditProfile } from "./pages/EditProfile";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -65,7 +65,7 @@ export function AppRouter() {
             path="/profile"
             element={
               <ProtectedRoute>
-                <ProfilePage />
+                <EditProfile />
               </ProtectedRoute>
             }
           />

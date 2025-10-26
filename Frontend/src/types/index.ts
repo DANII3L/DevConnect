@@ -43,7 +43,7 @@ export interface Project {
   author: Author;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -152,7 +152,7 @@ export interface ApiError {
   message: string;
   statusCode: number;
   code?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 // Tipos para validación
