@@ -64,7 +64,7 @@ class UserController {
     static async updateUser(req, res) {
         try {
             const { id } = req.params;
-            const { full_name, username, bio, avatar_url, website, role } = req.body;
+            const { full_name, username, bio, avatar_url, website, github_url, linkedin_url, role } = req.body;
             const token = req.headers.authorization?.replace('Bearer ', '');
             
             const result = await UserService.updateUser(id, {
@@ -73,6 +73,8 @@ class UserController {
                 bio,
                 avatar_url,
                 website,
+                github_url,
+                linkedin_url,
                 role
             }, token);
             

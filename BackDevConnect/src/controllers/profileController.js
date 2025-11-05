@@ -3,7 +3,14 @@ const ProfileService = require('../services/profileService');
 class ProfileController {
     static async getAllProfiles(req, res) {
         try {
-            const result = await ProfileService.getAllProfiles();
+            const { limit, offset, search } = req.query;
+            
+            const params = {};
+            if (limit) params.limit = parseInt(limit);
+            if (offset) params.offset = parseInt(offset);
+            if (search) params.search = search;
+            
+            const result = await ProfileService.getAllProfiles(params);
             
             if (result.success) {
                 res.json({
@@ -127,16 +134,30 @@ class ProfileController {
     // 🆕 NUEVO: Actualizar mi perfil
     static async updateProfile(req, res) {
         try {
-            const userId = req.user.id;
-            const { full_name, username, bio, avatar_url, website } = req.body;
+            const userId = req.user?.id;
+            
+            if (!userId) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'Usuario no autenticado'
+                });
+            }
+
+            // Obtener el token del header Authorization
+            const authHeader = req.headers.authorization;
+            const userToken = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+            
+            const { full_name, username, bio, avatar_url, website, github_url, linkedin_url } = req.body;
             
             const result = await ProfileService.updateProfile(userId, {
                 full_name,
                 username,
                 bio,
                 avatar_url,
-                website
-            });
+                website,
+                github_url,
+                linkedin_url
+            }, userToken);
             
             if (result.success) {
                 res.json({
@@ -151,7 +172,6 @@ class ProfileController {
                 });
             }
         } catch (error) {
-            console.error('Error en updateProfile:', error);
             res.status(500).json({
                 success: false,
                 error: 'Error al actualizar perfil'

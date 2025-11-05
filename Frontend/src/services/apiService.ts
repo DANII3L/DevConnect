@@ -50,11 +50,13 @@ class ApiService {
 
   // ==================== PROJECTS ====================
   static async getAllProjects(params?: {
+    page?: number;
     limit?: number;
     offset?: number;
     search?: string;
   }) {
     const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.offset) queryParams.append("offset", params.offset.toString());
     if (params?.search) queryParams.append("search", params.search);
@@ -168,6 +170,8 @@ class ApiService {
       bio?: string;
       avatar_url?: string;
       website?: string;
+      github_url?: string;
+      linkedin_url?: string;
     }
   ) {
     const response = await HttpService.put("/profiles/update", profileData, {
@@ -239,6 +243,8 @@ class ApiService {
       bio?: string;
       avatar_url?: string;
       website?: string;
+      github_url?: string;
+      linkedin_url?: string;
       role?: 'user' | 'admin';
     },
     token: string

@@ -1,92 +1,41 @@
-import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import ApiService from "../services/apiService";
-import { User } from "../types";
+import { useProfileForm } from "../hooks/useProfileForm";
+import { ProfileFormFields } from "../components/Profile/ProfileFormFields";
 import {
   User as UserIcon,
-  Mail,
-  Calendar,
-  Shield,
   Edit,
-  Globe,
   Loader2,
-  Users,
+  Save,
+  X as XIcon,
 } from "lucide-react";
 
 export function ProfilePage() {
-  const { user, session } = useAuth();
-  const navigate = useNavigate();
-  const [profileData, setProfileData] = useState<User | null>(null);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!session?.access_token) return;
-
-      setLoading(true);
-      try {
-        // Cargar perfil del usuario actual
-        const profileResponse = await ApiService.getProfile(
-          session.access_token
-        );
-
-        if (profileResponse.success && profileResponse.data) {
-          setProfileData(profileResponse.data);
-        }
-
-        // Si es admin, cargar todos los usuarios
-        if (user?.role === "admin") {
-          const usersResponse = await ApiService.getAllUsers(
-            session.access_token
-          );
-          if (usersResponse.success && usersResponse.data) {
-            setAllUsers(usersResponse.data);
-          }
-        } else {
-          // Si es usuario normal, cargar solo lista básica de perfiles
-          const profilesResponse = await ApiService.getAllProfiles();
-          if (profilesResponse.success && profilesResponse.data) {
-            setAllUsers(profilesResponse.data);
-          }
-        }
-      } catch (err) {
-        console.error("Error al cargar datos:", err);
-        setError("Error al cargar la información");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [session, user]);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const getRoleBadge = (role: string) => {
-    if (role === "admin") {
-      return (
-        <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold rounded-full">
-          <Shield className="w-3 h-3" />
-          Administrador
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full border border-blue-500/30">
-        <UserIcon className="w-3 h-3" />
-        Usuario
-      </span>
-    );
-  };
+  const { user } = useAuth();
+  const {
+    profileData,
+    loading,
+    error,
+    fullName,
+    setFullName,
+    username,
+    setUsername,
+    bio,
+    setBio,
+    avatarUrl,
+    setAvatarUrl,
+    website,
+    setWebsite,
+    githubUrl,
+    setGithubUrl,
+    linkedinUrl,
+    setLinkedinUrl,
+    isEditing,
+    saving,
+    message,
+    handleEdit,
+    handleCancel,
+    handleSave,
+  } = useProfileForm();
 
   if (loading) {
     return (
@@ -106,152 +55,140 @@ export function ProfilePage() {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-slate-900 py-8 px-4">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header con información del usuario actual */}
-        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-            {/* Avatar */}
-            <div className="flex-shrink-0">
-              {profileData.avatar_url ? (
-                <img
-                  src={profileData.avatar_url}
-                  alt={profileData.full_name || "Avatar"}
-                  className="w-24 h-24 rounded-full object-cover border-4 border-slate-700"
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 overflow-hidden">
+          {/* Header con foto de perfil grande */}
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 border-b border-slate-700">
+            <div className="flex flex-col items-center text-center mb-6">
+              {/* Foto de perfil grande */}
+              <div className="relative mb-4">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={fullName || username || "Avatar"}
+                    className="w-32 h-32 rounded-full object-cover border-4 border-slate-700 shadow-xl"
+                    onError={(e) => {
+                      e.currentTarget.src = "";
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center border-4 border-slate-700 shadow-xl">
+                    <UserIcon className="w-16 h-16 text-white" />
+                  </div>
+                )}
+                {isEditing && (
+                  <div className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2 shadow-lg border-2 border-slate-800">
+                    <Edit className="w-4 h-4 text-white" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Nombre y username */}
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold text-white">
+                  {fullName || username || "Mi Perfil"}
+                </h2>
+                {username && (
+                  <p className="text-slate-400 text-lg">@{username}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Botón Editar */}
+            <div className="flex justify-center">
+              {!isEditing && (
+                <button
+                  onClick={handleEdit}
+                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-lg hover:shadow-xl"
+                >
+                  <Edit className="w-5 h-5" />
+                  Editar Perfil
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Contenido del formulario */}
+          <div className="p-6">
+
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+              </div>
+            ) : (
+              <form onSubmit={handleSave} className="space-y-6">
+                {/* Usar el componente reutilizable de formulario de perfil */}
+                <ProfileFormFields
+                  fullName={fullName}
+                  username={username}
+                  bio={bio}
+                  avatarUrl={avatarUrl}
+                  website={website}
+                  githubUrl={githubUrl}
+                  linkedinUrl={linkedinUrl}
+                  email={user?.email}
+                  setFullName={setFullName}
+                  setUsername={setUsername}
+                  setBio={setBio}
+                  setAvatarUrl={setAvatarUrl}
+                  setWebsite={setWebsite}
+                  setGithubUrl={setGithubUrl}
+                  setLinkedinUrl={setLinkedinUrl}
+                  isEditing={isEditing}
+                  showEmail={true}
                 />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <UserIcon className="w-12 h-12 text-white" />
-                </div>
-              )}
-            </div>
 
-            {/* Info */}
-            <div className="flex-1 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <h1 className="text-3xl font-bold text-white">
-                  {profileData.full_name || "Sin nombre"}
-                </h1>
-                {getRoleBadge(profileData.role)}
-              </div>
-
-              <div className="space-y-2 text-slate-300">
-                {profileData.username && (
-                  <div className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4 text-slate-400" />
-                    <span>@{profileData.username}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-slate-400" />
-                  <span>{user?.email}</span>
-                </div>
-
-                {profileData.website && (
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-slate-400" />
-                    <a
-                      href={profileData.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 transition"
+                {/* Botones de acción */}
+                {isEditing && (
+                  <div className="flex gap-3 pt-6 border-t border-slate-700">
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      disabled={saving}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {profileData.website}
-                    </a>
+                      <XIcon className="w-5 h-5" />
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Guardando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-5 h-5" />
+                          <span>Guardar cambios</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 )}
 
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-slate-400" />
-                  <span>Miembro desde {formatDate(profileData.created_at)}</span>
-                </div>
-              </div>
-
-              {profileData.bio && (
-                <p className="text-slate-300 mt-4 leading-relaxed">
-                  {profileData.bio}
-                </p>
-              )}
-            </div>
-
-            {/* Botón editar */}
-            <button
-              onClick={() => navigate("/edit-profile")}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-            >
-              <Edit className="w-4 h-4" />
-              Editar Perfil
-            </button>
-          </div>
-        </div>
-
-        {/* Lista de usuarios */}
-        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-          <div className="flex items-center gap-3 mb-6">
-            <Users className="w-6 h-6 text-blue-400" />
-            <h2 className="text-2xl font-bold text-white">
-              {user?.role === "admin" ? "Gestión de Usuarios" : "Comunidad"}
-            </h2>
-          </div>
-
-          {allUsers.length === 0 ? (
-            <p className="text-slate-400 text-center py-8">
-              No hay usuarios registrados
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allUsers
-                .filter((u) => u.id !== user?.id) // No mostrar el usuario actual
-                .map((otherUser) => (
+                {/* Mensaje de estado */}
+                {message && (
                   <div
-                    key={otherUser.id}
-                    className="bg-slate-900 rounded-lg p-4 border border-slate-700 hover:border-slate-600 transition"
+                    className={`text-center py-3 px-4 rounded-lg mt-4 ${
+                      message.includes("Error")
+                        ? "bg-red-500/10 border border-red-500/50 text-red-400"
+                        : "bg-green-500/10 border border-green-500/50 text-green-400"
+                    }`}
                   >
-                    <div className="flex items-start gap-3">
-                      {otherUser.avatar_url ? (
-                        <img
-                          src={otherUser.avatar_url}
-                          alt={otherUser.full_name || "Avatar"}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center">
-                          <UserIcon className="w-6 h-6 text-slate-400" />
-                        </div>
-                      )}
-
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-semibold truncate">
-                          {otherUser.full_name || "Sin nombre"}
-                        </h3>
-                        {otherUser.username && (
-                          <p className="text-slate-400 text-sm truncate">
-                            @{otherUser.username}
-                          </p>
-                        )}
-                        <div className="mt-2">{getRoleBadge(otherUser.role)}</div>
-
-                        {/* Botones de admin */}
-                        {user?.role === "admin" && (
-                          <div className="flex gap-2 mt-3">
-                            <button
-                              onClick={() =>
-                                navigate(`/admin/user/${otherUser.id}`)
-                              }
-                              className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-                            >
-                              Editar
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    {message}
                   </div>
-                ))}
-            </div>
-          )}
+                )}
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </div>

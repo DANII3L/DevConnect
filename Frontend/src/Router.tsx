@@ -1,13 +1,16 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { HomePage } from "./pages/HomePage";
+import { LandingPage } from "./pages/LandingPage";
 import { AuthPage } from "./pages/AuthPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProfilePage } from "./pages/ProfilePage";
-import { EditProfile } from "./pages/EditProfile";
 import { AdminUserEdit } from "./pages/AdminUserEdit";
+import { CommunityPage } from "./pages/CommunityPage";
 import { ErrorBoundary } from "./UI/ErrorBoundary";
 import { LoadingSpinner } from "./UI/LoadingSpinner";
+import { Navbar } from "./components/Navbar";
+import { Footer } from "./components/Footer";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -39,7 +42,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (user.role !== "admin") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/projects" replace />;
   }
 
   return <>{children}</>;
@@ -56,70 +59,91 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return user ? <Navigate to="/" replace /> : <>{children}</>;
+  return user ? <Navigate to="/projects" replace /> : <>{children}</>;
+}
+
+function GlobalLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const showNavbar = location.pathname !== "/auth";
+  const isAuthPage = location.pathname === "/auth";
+
+  return (
+    <div className={`min-h-screen flex flex-col ${isAuthPage ? '' : 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'}`}>
+      {showNavbar && <Navbar />}
+      <main className={`flex-1 ${isAuthPage ? 'relative' : ''}`}>
+        {children}
+      </main>
+      {showNavbar && <Footer />}
+    </div>
+  );
 }
 
 export function AppRouter() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <Routes>
-          {/* Rutas públicas */}
-          <Route
-            path="/auth"
-            element={
-              <PublicRoute>
-                <AuthPage />
-              </PublicRoute>
-            }
-          />
+        <GlobalLayout>
+          <Routes>
+            {/* Ruta pública - Landing Page */}
+            <Route path="/" element={<LandingPage />} />
 
-          {/* Rutas protegidas */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <HomePage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Rutas públicas */}
+            <Route
+              path="/auth"
+              element={
+                <PublicRoute>
+                  <AuthPage />
+                </PublicRoute>
+              }
+            />
 
-          {/* 👤 Ruta de visualización de perfil */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Rutas protegidas */}
+            <Route
+              path="/projects"
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* ✏️ Ruta de edición de perfil */}
-          <Route
-            path="/edit-profile"
-            element={
-              <ProtectedRoute>
-                <EditProfile />
-              </ProtectedRoute>
-            }
-          />
+            {/* 👥 Ruta de comunidad */}
+            <Route
+              path="/community"
+              element={
+                <ProtectedRoute>
+                  <CommunityPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* 🔐 Rutas de administrador */}
-          <Route
-            path="/admin/user/:userId"
-            element={
-              <AdminRoute>
-                <AdminUserEdit />
-              </AdminRoute>
-            }
-          />
+            {/* 👤 Ruta de visualización de perfil */}
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Página 404 */}
-          <Route path="/404" element={<NotFoundPage />} />
+            {/* 🔐 Rutas de administrador */}
+            <Route
+              path="/admin/user/:userId"
+              element={
+                <AdminRoute>
+                  <AdminUserEdit />
+                </AdminRoute>
+              }
+            />
 
-          {/* Ruta por defecto */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+            {/* Página 404 */}
+            <Route path="/404" element={<NotFoundPage />} />
+
+            {/* Ruta por defecto */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </GlobalLayout>
       </BrowserRouter>
     </ErrorBoundary>
   );

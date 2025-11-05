@@ -1,26 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Plus, Loader2 } from 'lucide-react';
 import ApiService from '../../services/apiService';
 import { useAuth } from '../../contexts/AuthContext';
+import { Project } from '../../types';
 
 interface ProjectFormProps {
+  project?: Project | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function ProjectForm({ onClose, onSuccess }: ProjectFormProps) {
+export function ProjectForm({ project, onClose, onSuccess }: ProjectFormProps) {
   const { user, session } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [techInput, setTechInput] = useState('');
 
+  const isEditMode = !!project;
+
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    demo_url: '',
-    github_url: '',
-    tech_stack: [] as string[],
-    image_url: '',
+    title: project?.title || '',
+    description: project?.description || '',
+    demo_url: project?.demo_url || '',
+    github_url: project?.github_url || '',
+    tech_stack: project?.tech_stack || [] as string[],
+    image_url: project?.image_url || '',
   });
 
   const handleAddTech = () => {
@@ -40,6 +44,19 @@ export function ProjectForm({ onClose, onSuccess }: ProjectFormProps) {
     });
   };
 
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        title: project.title || '',
+        description: project.description || '',
+        demo_url: project.demo_url || '',
+        github_url: project.github_url || '',
+        tech_stack: project.tech_stack || [],
+        image_url: project.image_url || '',
+      });
+    }
+  }, [project]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !session?.access_token) return;
@@ -48,23 +65,38 @@ export function ProjectForm({ onClose, onSuccess }: ProjectFormProps) {
     setLoading(true);
 
     try {
-      const response = await ApiService.createProject({
-        title: formData.title,
-        description: formData.description,
-        demo_url: formData.demo_url || undefined,
-        github_url: formData.github_url || undefined,
-        tech_stack: formData.tech_stack,
-        image_url: formData.image_url || undefined,
-      }, session.access_token);
+      let response;
+      
+      if (isEditMode && project) {
+        // Modo edición
+        response = await ApiService.updateProject(project.id, {
+          title: formData.title,
+          description: formData.description,
+          demo_url: formData.demo_url || undefined,
+          github_url: formData.github_url || undefined,
+          tech_stack: formData.tech_stack,
+          image_url: formData.image_url || undefined,
+        }, session.access_token);
+      } else {
+        // Modo creación
+        response = await ApiService.createProject({
+          title: formData.title,
+          description: formData.description,
+          demo_url: formData.demo_url || undefined,
+          github_url: formData.github_url || undefined,
+          tech_stack: formData.tech_stack,
+          image_url: formData.image_url || undefined,
+        }, session.access_token);
+      }
 
       if (response.success) {
         onSuccess();
         onClose();
       } else {
-        throw new Error(response.error || 'Error al crear proyecto');
+        throw new Error(response.error || `Error al ${isEditMode ? 'actualizar' : 'crear'} proyecto`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear proyecto');
+      setError(err instanceof Error ? err.message : `Error al ${isEditMode ? 'actualizar' : 'crear'} proyecto`);
     } finally {
       setLoading(false);
     }
@@ -74,7 +106,9 @@ export function ProjectForm({ onClose, onSuccess }: ProjectFormProps) {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-slate-800 border-b border-slate-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">Share New Project</h2>
+          <h2 className="text-2xl font-bold text-white">
+            {isEditMode ? 'Editar Proyecto' : 'Compartir Nuevo Proyecto'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
@@ -221,10 +255,10 @@ export function ProjectForm({ onClose, onSuccess }: ProjectFormProps) {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating...
+                  {isEditMode ? 'Guardando...' : 'Creando...'}
                 </>
               ) : (
-                'Create Project'
+                isEditMode ? 'Guardar Cambios' : 'Crear Proyecto'
               )}
             </button>
           </div>

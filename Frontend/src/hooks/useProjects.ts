@@ -2,45 +2,100 @@ import { useState, useEffect } from 'react';
 import ApiService from '../services/apiService';
 import { cacheService } from '../services/cacheService';
 import { Project } from '../types';
+import { PAGINATION } from '../utils/constants';
 
-export function useProjects() {
+export interface UseProjectsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface UseProjectsReturn {
+  projects: Project[];
+  loading: boolean;
+  error: string | null;
+  total: number;
+  pagination: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  } | null;
+  fetchProjects: (params?: UseProjectsParams) => Promise<void>;
+  createProject: (projectData: any, token: string) => Promise<any>;
+  updateProject: (id: string, projectData: any, token: string) => Promise<any>;
+  deleteProject: (id: string, token: string) => Promise<void>;
+}
+
+export function useProjects(initialParams?: UseProjectsParams): UseProjectsReturn {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
+  const [pagination, setPagination] = useState<{
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  } | null>(null);
+  const [currentParams, setCurrentParams] = useState<UseProjectsParams>(
+    initialParams || { page: 1, limit: PAGINATION.DEFAULT_LIMIT }
+  );
 
-  const fetchProjects = async (params?: {
-    limit?: number;
-    offset?: number;
-    search?: string;
-  }) => {
-    const cacheKey = `projects-${JSON.stringify(params || {})}`;
+  const fetchProjects = async (params?: UseProjectsParams) => {
+    const queryParams = { ...currentParams, ...params };
+    const cacheKey = `projects-${JSON.stringify(queryParams)}`;
     
-    // Verificar cache primero
-    const cachedData = cacheService.get<{projects: Project[], total: number}>(cacheKey);
-    if (cachedData) {
-      setProjects(cachedData.projects);
-      setTotal(cachedData.total);
-      setLoading(false);
-      return;
+    // No usar cache para búsquedas o paginación
+    const useCache = !queryParams.search && queryParams.page === 1;
+    
+    if (useCache) {
+      const cachedData = cacheService.get<{projects: Project[], total: number}>(cacheKey);
+      if (cachedData) {
+        setProjects(cachedData.projects);
+        setTotal(cachedData.total);
+        setLoading(false);
+        return;
+      }
     }
 
     try {
       setLoading(true);
       setError(null);
       
-      const response = await ApiService.getAllProjects(params);
+      const response = await ApiService.getAllProjects({
+        page: queryParams.page || 1,
+        limit: queryParams.limit || PAGINATION.DEFAULT_LIMIT,
+        search: queryParams.search,
+      });
 
       if (response.success) {
         const projectsData = response.projects || [];
         setProjects(projectsData);
         setTotal(response.total || 0);
         
-        // Guardar en cache
-        cacheService.set(cacheKey, {
-          projects: projectsData,
-          total: response.total || 0
-        });
+        // Actualizar información de paginación
+        if (response.pagination) {
+          setPagination({
+            page: response.pagination.page || queryParams.page || 1,
+            limit: response.pagination.limit || queryParams.limit || PAGINATION.DEFAULT_LIMIT,
+            totalPages: response.pagination.totalPages || Math.ceil((response.total || 0) / (queryParams.limit || PAGINATION.DEFAULT_LIMIT)),
+            hasNext: response.pagination.hasNext || false,
+            hasPrev: response.pagination.hasPrev || false,
+          });
+        }
+        
+        setCurrentParams(queryParams);
+        
+        // Solo cachear primera página sin búsqueda
+        if (useCache) {
+          cacheService.set(cacheKey, {
+            projects: projectsData,
+            total: response.total || 0
+          });
+        }
       } else {
         throw new Error(response.error || 'Error al cargar proyectos');
       }
@@ -64,7 +119,6 @@ export function useProjects() {
       const response = await ApiService.createProject(projectData, token);
       
       if (response.success) {
-        // Limpiar cache y recargar
         cacheService.clear();
         await fetchProjects();
         return response.project;
@@ -89,7 +143,6 @@ export function useProjects() {
       const response = await ApiService.updateProject(id, projectData, token);
       
       if (response.success) {
-        // Limpiar cache y actualizar localmente
         cacheService.clear();
         setProjects(prevProjects => 
           prevProjects.map(project => 
@@ -111,7 +164,6 @@ export function useProjects() {
       const response = await ApiService.deleteProject(id, token);
       
       if (response.success) {
-        // Limpiar cache y actualizar localmente
         cacheService.clear();
         setProjects(prevProjects => 
           prevProjects.filter(project => project.id !== id)
@@ -127,7 +179,7 @@ export function useProjects() {
   };
 
   useEffect(() => {
-    fetchProjects();
+    fetchProjects(initialParams);
   }, []);
 
   return {
@@ -135,7 +187,8 @@ export function useProjects() {
     loading,
     error,
     total,
-    refetch: fetchProjects,
+    pagination,
+    fetchProjects,
     createProject,
     updateProject,
     deleteProject,

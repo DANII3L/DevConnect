@@ -1,13 +1,10 @@
 import { ProjectList } from "../components/Project/ProjectList";
-import { MainLayout } from "../components/layout/MainLayout";
-import { useState } from "react";
+import { useNewProjectForm } from "../hooks/useNewProjectForm";
 
 export function HomePage() {
-  const [showForm, setShowForm] = useState(false);
+  const { showForm, setShowForm } = useNewProjectForm();
 
   return (
-    <MainLayout onNewProject={() => setShowForm(true)}>
-      <ProjectList showForm={showForm} onCloseForm={() => setShowForm(false)} />
-    </MainLayout>
+    <ProjectList showForm={showForm} onCloseForm={() => setShowForm(false)} />
   );
 }

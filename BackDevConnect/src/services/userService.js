@@ -5,7 +5,7 @@ class UserService {
         try {
             let query = supabase
                 .from('profiles')
-                .select('id, full_name, username, avatar_url, bio, website, role, created_at, updated_at', { count: 'exact' });
+                .select('id, full_name, username, avatar_url, bio, website, github_url, linkedin_url, role, created_at, updated_at', { count: 'exact' });
 
             // Búsqueda
             if (params.search) {
@@ -45,7 +45,7 @@ class UserService {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('id, full_name, username, avatar_url, bio, website, role, created_at, updated_at')
+                .select('id, full_name, username, avatar_url, bio, website, github_url, linkedin_url, role, created_at, updated_at')
                 .eq('id', id)
                 .single();
 
@@ -99,13 +99,15 @@ class UserService {
             if (userData.bio !== undefined) updateData.bio = userData.bio;
             if (userData.avatar_url !== undefined) updateData.avatar_url = userData.avatar_url;
             if (userData.website !== undefined) updateData.website = userData.website;
+            if (userData.github_url !== undefined) updateData.github_url = userData.github_url;
+            if (userData.linkedin_url !== undefined) updateData.linkedin_url = userData.linkedin_url;
             if (userData.role !== undefined) updateData.role = userData.role;
 
             const { data, error } = await supabaseAdmin
                 .from('profiles')
                 .update(updateData)
                 .eq('id', userId)
-                .select('id, full_name, username, avatar_url, bio, website, role, created_at, updated_at')
+                .select('id, full_name, username, avatar_url, bio, website, github_url, linkedin_url, role, created_at, updated_at, github_url, linkedin_url')
                 .single();
 
             if (error) throw error;
@@ -159,10 +161,6 @@ class UserService {
                 .eq('id', userId);
 
             if (profileError) throw profileError;
-
-            // Nota: Para eliminar completamente de auth.users, necesitarías usar 
-            // la API de Admin de Supabase o hacerlo desde el dashboard
-            // Por ahora solo eliminamos el perfil
 
             return {
                 success: true

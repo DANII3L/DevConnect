@@ -8,6 +8,8 @@ export interface User {
   role: 'user' | 'admin'; // ✅ NUEVO: Campo de rol
   bio?: string; // ✅ NUEVO: Para el perfil
   website?: string; // ✅ NUEVO: Para el perfil
+  github_url?: string; // ✅ NUEVO: URL de GitHub
+  linkedin_url?: string; // ✅ NUEVO: URL de LinkedIn
   created_at: string;
   updated_at: string;
 }

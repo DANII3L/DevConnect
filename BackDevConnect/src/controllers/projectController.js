@@ -34,19 +34,39 @@ class ProjectController {
      *         $ref: '#/components/responses/InternalServerError'
      */
     static async getAllProjects(req, res) {
-        const { limit = 10, offset = 0, search } = req.query;
+        const { limit = 10, page = 1, offset, search } = req.query;
+        
+        // Validar y limitar el tamaño de página
+        let calculatedLimit = parseInt(limit);
+        if (calculatedLimit < 1) calculatedLimit = 10;
+        if (calculatedLimit > 100) calculatedLimit = 100; // Límite máximo para evitar sobrecarga
+        
+        // Calcular offset basado en page si se proporciona
+        let calculatedOffset = offset ? parseInt(offset) : (parseInt(page) - 1) * calculatedLimit;
+        
         const result = await ProjectService.getProjectsPaginated(
-            parseInt(limit), 
-            parseInt(offset), 
+            calculatedLimit, 
+            calculatedOffset, 
             search
         );
         
         if (result.success) {
+            const currentPage = page ? parseInt(page) : Math.floor(calculatedOffset / calculatedLimit) + 1;
+            const totalPages = Math.ceil(result.total / calculatedLimit);
+            
             res.json({
                 success: true,
                 total: result.total,
                 projects: result.data,
-                pagination: result.pagination
+                pagination: {
+                    page: currentPage,
+                    limit: calculatedLimit,
+                    offset: calculatedOffset,
+                    total: result.total,
+                    totalPages: totalPages,
+                    hasNext: currentPage < totalPages,
+                    hasPrev: currentPage > 1
+                }
             });
         } else {
             res.status(500).json({
